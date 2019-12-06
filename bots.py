@@ -250,10 +250,7 @@ class StudentBot:
             ptm = state.ptm
             loc = locs[ptm]
             maxval = act = None
-            actions = TronProblem.get_safe_actions(board, loc)
-            if len(actions) == 0:
-                actions = asp.get_available_actions(state)
-            for action in actions:
+            for action in asp.get_available_actions(state):
                 r, c = TronProblem.move(loc, action)
                 powerup1 = powerup2 = None
                 if board[r][c] == CellType.TRAP or board[r][c] == CellType.BOMB or board[r][c] == CellType.ARMOR:
@@ -266,7 +263,13 @@ class StudentBot:
                     info = TronStateInfo(asp, next_state, powerup1, powerup2)
                 else:
                     info, _ = maxvalue(asp, next_state, depth + 1)
-                if not maxval or info.cmp(maxval)[ptm] == 1 or (info.cmp(maxval)[ptm] == 0 and info.cmp(maxval)[0 if ptm == 1 else 1] == -1):
+                if not maxval:
+                    maxval = info
+                    act = action
+                    continue
+                res = info.cmp(maxval)
+                x, y = res[ptm], res[0 if ptm == 1 else 1]
+                if x == 1 or (x == 0 and y == -1) or (x == 0 and y == 0 and len(TronProblem.get_safe_actions(board, [r, c])) < 3):
                     maxval = info
                     act = action
             return maxval, act
@@ -288,87 +291,87 @@ class StudentBot:
         """
         pass
 
-    def alpha_beta_cutoff(asp, cutoff_ply):
+    # def alpha_beta_cutoff(asp, cutoff_ply):
 
-        def max_value(asp, state, a, b, cutoff_ply, player):
-            if asp.is_terminal_state(state):
-                return TronStateInfo(state)
+    #     def max_value(asp, state, a, b, cutoff_ply, player):
+    #         if asp.is_terminal_state(state):
+    #             return TronStateInfo(state)
 
-            if cutoff_ply == 0:
-                return TronStateInfo(state)
+    #         if cutoff_ply == 0:
+    #             return TronStateInfo(state)
 
-            actions = asp.get_available_actions(state)
-            cur_max = None
-            for action in actions:
-                next_state_info = min_value(asp, asp.transition(state, action), a, b, cutoff_ply - 1, player)
-                if not cur_max:
-                    cur_max = next_state_info
+    #         actions = asp.get_available_actions(state)
+    #         cur_max = None
+    #         for action in actions:
+    #             next_state_info = min_value(asp, asp.transition(state, action), a, b, cutoff_ply - 1, player)
+    #             if not cur_max:
+    #                 cur_max = next_state_info
 
-                cmp_result = cur_max.cmp(next_state_info)
-                if cmp_result[player] == -1:
-                    cur_max = next_state_info
-                else if cmp_result[player] == 0:
-                    if cmp_result[1 - player] == 1:
-                        cur_max = next_state_info
+    #             cmp_result = cur_max.cmp(next_state_info)
+    #             if cmp_result[player] == -1:
+    #                 cur_max = next_state_info
+    #             else if cmp_result[player] == 0:
+    #                 if cmp_result[1 - player] == 1:
+    #                     cur_max = next_state_info
 
-                if cur_max.cmp(b)[player] == 1:
-                    return cur_max
-                if cur_max.cmp(a)[player] == 1:
-                    a = cur_max
+    #             if cur_max.cmp(b)[player] == 1:
+    #                 return cur_max
+    #             if cur_max.cmp(a)[player] == 1:
+    #                 a = cur_max
 
-            return cur_max
+    #         return cur_max
 
-        def min_value(asp, state, a, b, cutoff_ply, player):
-            if asp.is_terminal_state(state):
-                return TronStateInfo(state)
+    #     def min_value(asp, state, a, b, cutoff_ply, player):
+    #         if asp.is_terminal_state(state):
+    #             return TronStateInfo(state)
 
-            if cutoff_ply == 0:
-                return TronStateInfo(state)
+    #         if cutoff_ply == 0:
+    #             return TronStateInfo(state)
 
-            actions = asp.get_available_actions(state)
-            cur_min = None
-            for action in actions:
-                next_state_info = max_value(asp, asp.transition(state, action), a, b, cutoff_ply - 1, player)
-                if not cur_min:
-                    cur_min = next_state_info
+    #         actions = asp.get_available_actions(state)
+    #         cur_min = None
+    #         for action in actions:
+    #             next_state_info = max_value(asp, asp.transition(state, action), a, b, cutoff_ply - 1, player)
+    #             if not cur_min:
+    #                 cur_min = next_state_info
 
-                cmp_result = cur_min.cmp(next_state_info)
-                if cmp_result[player] == 1:
-                    cur_min = next_state_info
-                else if cmp_result[player] == 0:
-                    if cmp_result[1 - player] == -1:
-                        cur_min = next_state_info
+    #             cmp_result = cur_min.cmp(next_state_info)
+    #             if cmp_result[player] == 1:
+    #                 cur_min = next_state_info
+    #             else if cmp_result[player] == 0:
+    #                 if cmp_result[1 - player] == -1:
+    #                     cur_min = next_state_info
 
-                if cur_min.cmp(a)[player] == -1:
-                    return cur_min
-                if cur_max.cmp(b)[player] == -1:
-                    b = cur_min
+    #             if cur_min.cmp(a)[player] == -1:
+    #                 return cur_min
+    #             if cur_max.cmp(b)[player] == -1:
+    #                 b = cur_min
 
-            return cur_min
+    #         return cur_min
 
-        cur_state = asp.get_start_state()
-        player = cur_state.player_to_move()
-        actions = asp.get_available_actions(cur_state)
-        ret_a = None
+    #     cur_state = asp.get_start_state()
+    #     player = cur_state.player_to_move()
+    #     actions = asp.get_available_actions(cur_state)
+    #     ret_a = None
 
-        a, b, cur_max = None, None, None
-        for action in actions:
-            next_state_info = min_value(asp, asp.transition(cur_state, action), a, b, cutoff_ply - 1, player)
-            cur_max = next_state_info if not cur_max
-            a = cur_max if not a
-            b = cur_max if not b
+    #     a, b, cur_max = None, None, None
+    #     for action in actions:
+    #         next_state_info = min_value(asp, asp.transition(cur_state, action), a, b, cutoff_ply - 1, player)
+    #         cur_max = next_state_info if not cur_max
+    #         a = cur_max if not a
+    #         b = cur_max if not b
 
-            cmp_result = cur_max.cmp(next_state_info)
-            if cmp_result[player] == -1:
-                cur_max = next_state_info
-                ret_a = action
+    #         cmp_result = cur_max.cmp(next_state_info)
+    #         if cmp_result[player] == -1:
+    #             cur_max = next_state_info
+    #             ret_a = action
 
-            if cur_max.cmp(b)[player] == 1:
-                return ret_a
-            if cur_max.cmp(a)[player] == 1:
-                a = cur_max
+    #         if cur_max.cmp(b)[player] == 1:
+    #             return ret_a
+    #         if cur_max.cmp(a)[player] == 1:
+    #             a = cur_max
 
-        return ret_a
+    #     return ret_a
 
 
 class RandBot:

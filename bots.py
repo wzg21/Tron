@@ -244,7 +244,9 @@ class StudentBot:
         To get started, you can get the current
         state by calling asp.get_start_state()
         """
-        def maxvalue(asp, state, depth):
+        max_depth = 2
+        def maxvalue(asp, state, depth, b1, b2):
+            nonlocal max_depth
             locs = state.player_locs
             board = state.board
             ptm = state.ptm
@@ -259,22 +261,52 @@ class StudentBot:
                     powerup1, powerup2 = powerup2, powerup1
                 next_state = asp.transition(state, action)
                 info = None
-                if asp.is_terminal_state(next_state) or depth > 1 or (ptm == 0 and powerup1 or ptm == 1 and powerup2):
+                if asp.is_terminal_state(next_state) or depth > max_depth or (ptm == 0 and powerup1 or ptm == 1 and powerup2):
                     info = TronStateInfo(asp, next_state, powerup1, powerup2)
                 else:
-                    info, _ = maxvalue(asp, next_state, depth + 1)
+                    info, _ = maxvalue(asp, next_state, depth + 1, b1, b2)
+                flag = 0
                 if not maxval:
                     maxval = info
                     act = action
-                    continue
-                res = info.cmp(maxval)
-                x, y = res[ptm], res[0 if ptm == 1 else 1]
-                if x == 1 or (x == 0 and y == -1) or (x == 0 and y == 0 and len(TronProblem.get_safe_actions(board, [r, c])) < 3):
-                    maxval = info
-                    act = action
+                    flag = 1
+                else:
+                    res = info.cmp(maxval)
+                    x, y = res[ptm], res[0 if ptm == 1 else 1]
+                    if x == 1 or (x == 0 and y == -1) or (x == 0 and y == 0 and len(TronProblem.get_safe_actions(board, [r, c])) < 3):
+                        maxval = info
+                        act = action
+                        flag = 1
+                if flag:
+                    if ptm == 0:
+                        if b1:
+                            res = maxval.cmp(b1)
+                            if res[0] == 1 or (res[0] == 0 and res[1] == -1):
+                                return maxval, act
+                        if not b2:
+                            b2 = maxval
+                        else:
+                            res = maxval.cmp(b2)
+                            if res[0] == 1 or (res[0] == 0 and res[1] == -1):
+                                b2 = maxval
+                    else:
+                        if b2:
+                            res = maxval.cmp(b2)
+                            if res[1] == 1 or (res[1] == 0 and res[0] == -1):
+                                return maxval, act
+                        if not b1:
+                            b1 = maxval
+                        else:
+                            res = maxval.cmp(b1)
+                            if res[1] == 1 or (res[1] == 0 and res[0] == -1):
+                                b1 = maxval
             return maxval, act
 
-        _, act = maxvalue(asp, asp.get_start_state(), 1)
+        start_state = asp.get_start_state()
+        locs = start_state.player_locs
+        if abs(locs[0][0] - locs[1][0]) + abs(locs[0][0] - locs[1][0]) <= 4:
+            max_depth = 3
+        _, act = maxvalue(asp, start_state, 1, None, None)
         return act
 
     def cleanup(self):

@@ -98,7 +98,7 @@ class TronStateInfo:
                     x = 1
                 elif self.p1_closest_num < other.p1_closest_num:
                     x = -1
-        
+
         #y
         #player has no safe actions
         if self.p2_closest_num == 0:
@@ -160,10 +160,10 @@ class TronStateInfo:
                     y = 1
                 elif self.p2_closest_num < other.p2_closest_num:
                     y = -1
-        
+
         return [x, y]
-        
-    
+
+
     def _extract_state_info(self, asp, state):
         if asp.is_terminal_state(state):
             self.p1_win, self.p2_win = asp.evaluate_state(state)
@@ -172,7 +172,7 @@ class TronStateInfo:
         self.ptm = ptm
         loc1, loc2 = state.player_locs
         board = state.board
-        
+
         q1 = Queue()
         q1.put(loc1 if ptm == 0 else loc2)
         d1, n1, n2, n = 1, 1, 0, 0
@@ -226,7 +226,7 @@ class TronStateInfo:
             m += m2
             m1, m2 = m2, 0
             d2 += 1
-        
+
         self.p1_closest_num = n if ptm == 0 else m
         self.p2_closest_num = m if ptm == 0 else n
         self.p1_closest_powerups = copy.deepcopy(powerups1) if ptm == 0 else copy.deepcopy(powerups2)
@@ -235,6 +235,8 @@ class TronStateInfo:
 
 class StudentBot:
     """ Write your student bot here"""
+    def __init__(self):
+        self.BOT_NAME = "tea bot"
 
     def decide(self, asp):
         """

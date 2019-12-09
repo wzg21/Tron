@@ -47,7 +47,7 @@ class TronStateInfo:
             else:
                 x = -1
         #TRAP
-        if x == 0:
+        if x == 0 and self.p1_closest_num >= self.p2_closest_num and other.p1_closest_num >= other.p2_closest_num:
             traps = []
             if self.p1_closest_num >= self.p2_closest_num and other.p1_closest_num >= other.p2_closest_num:
                 traps = [CellType.TRAP, CellType.BOMB, CellType.ARMOR]
@@ -109,7 +109,7 @@ class TronStateInfo:
             else:
                 y = -1
         #TRAP
-        if y == 0:
+        if y == 0 and self.p2_closest_num >= self.p1_closest_num and other.p2_closest_num >= other.p1_closest_num:
             traps = []
             if self.p2_closest_num >= self.p1_closest_num and other.p2_closest_num >= other.p1_closest_num:
                 traps = [CellType.TRAP, CellType.BOMB, CellType.ARMOR]
